@@ -15276,7 +15276,6 @@ static void intel_modeset_readout_hw_state(struct drm_device *dev)
 		}
 
 		crtc->base.hwmode = crtc->config->base.adjusted_mode;
-		readout_plane_state(crtc, to_intel_crtc_state(crtc->base.state));
 
 		DRM_DEBUG_KMS("[CRTC:%d] hw state readout: %s\n",
 			      crtc->base.base.id,
@@ -15311,6 +15310,14 @@ static void intel_modeset_readout_hw_state(struct drm_device *dev)
 			crtc = to_intel_crtc(dev_priv->pipe_to_crtc_mapping[pipe]);
 			encoder->base.crtc = &crtc->base;
 			encoder->get_config(encoder, crtc->config);
+
+			/*
+			 * Planes must be readout after we get dotclock from
+			 * encoder since its disable_plane() callback triggers a
+			 * watermark update.
+			 */
+			readout_plane_state(crtc,
+					to_intel_crtc_state(crtc->base.state));
 		} else {
 			encoder->base.crtc = NULL;
 		}
