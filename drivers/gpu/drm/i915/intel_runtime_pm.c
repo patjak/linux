@@ -65,6 +65,13 @@
 	     i--)							 \
 		if ((power_well)->domains & (domain_mask))
 
+#define for_each_dc_state(i, dc_state, domain_mask, power_domains)	\
+	for (i = 0;							\
+	     i < (power_domains)->dc_state_count &&			\
+		 ((dc_state) = &(power_domains)->dc_states[i]);	\
+	     i++)							\
+		if ((dc_state)->domains & (domain_mask))
+
 bool intel_display_power_well_is_enabled(struct drm_i915_private *dev_priv,
 				    int power_well_id);
 
@@ -82,6 +89,22 @@ static void intel_power_well_disable(struct drm_i915_private *dev_priv,
 	DRM_DEBUG_KMS("disabling %s\n", power_well->name);
 	power_well->hw_enabled = false;
 	power_well->ops->disable(dev_priv, power_well);
+}
+
+static void intel_dc_state_enable(struct drm_i915_private *dev_priv,
+				  struct i915_dc_state *dc_state)
+{
+	DRM_DEBUG_KMS("enabling %s\n", dc_state->name);
+	dc_state->ops->enable(dev_priv, dc_state);
+	dc_state->hw_disabled = false;
+}
+
+static void intel_dc_state_disable(struct drm_i915_private *dev_priv,
+				   struct i915_dc_state *dc_state)
+{
+	DRM_DEBUG_KMS("disabling %s\n", dc_state->name);
+	dc_state->ops->disable(dev_priv, dc_state);
+	dc_state->hw_disabled = true;
 }
 
 /*
@@ -377,6 +400,10 @@ static void hsw_set_power_well(struct drm_i915_private *dev_priv,
 	BXT_DISPLAY_POWERWELL_2_POWER_DOMAINS)) |	\
 	BIT(POWER_DOMAIN_INIT))
 
+#define SKL_DC6_STATE_POWER_DOMAINS (			\
+	BIT(POWER_DOMAIN_AUX_A)				\
+	BIT(POWER_DOMAIN_INIT))
+
 static void assert_can_enable_dc9(struct drm_i915_private *dev_priv)
 {
 	struct drm_device *dev = dev_priv->dev;
@@ -579,6 +606,26 @@ static void skl_disable_dc6(struct drm_i915_private *dev_priv)
 	val &= ~DC_STATE_EN_UPTO_DC6;
 	I915_WRITE(DC_STATE_EN, val);
 	POSTING_READ(DC_STATE_EN);
+}
+
+void bxt_enable_dc(struct drm_i915_private *dev_priv,
+		   struct i915_dc_state *dc_state)
+{
+}
+
+void bxt_disable_dc(struct drm_i915_private *dev_priv,
+		    struct i915_dc_state *dc_state)
+{
+}
+
+void skl_enable_dc(struct drm_i915_private *dev_priv,
+		   struct i915_dc_state *dc_state)
+{
+}
+
+void skl_disable_dc(struct drm_i915_private *dev_priv,
+		    struct i915_dc_state *dc_state)
+{
 }
 
 static void skl_set_power_well(struct drm_i915_private *dev_priv,
@@ -1370,6 +1417,7 @@ void intel_display_power_get(struct drm_i915_private *dev_priv,
 {
 	struct i915_power_domains *power_domains;
 	struct i915_power_well *power_well;
+	struct i915_dc_state *dc_state;
 	int i;
 
 	intel_runtime_pm_get(dev_priv);
@@ -1381,6 +1429,13 @@ void intel_display_power_get(struct drm_i915_private *dev_priv,
 	for_each_power_well(i, power_well, BIT(domain), power_domains) {
 		if (!power_well->count++)
 			intel_power_well_enable(dev_priv, power_well);
+	}
+
+	for_each_dc_state(i, dc_state, BIT(domain), power_domains) {
+		WARN_ON(dc_state->count < 0);
+
+		if (!dc_state->count == 0)
+			intel_dc_state_enable(dev_priv, dc_state);
 	}
 
 	power_domains->domain_use_count[domain]++;
@@ -1544,6 +1599,16 @@ static const struct i915_power_well_ops skl_power_well_ops = {
 	.enable = skl_power_well_enable,
 	.disable = skl_power_well_disable,
 	.is_enabled = skl_power_well_enabled,
+};
+
+static const struct i915_dc_state_ops skl_dc_state_ops = {
+	.enable = skl_enable_dc,
+	.disable = skl_disable_dc,
+};
+
+static const struct i915_dc_state_ops bxt_dc_state_ops = {
+	.enable = bxt_enable_dc,
+	.disable = bxt_disable_dc,
 };
 
 static struct i915_power_well hsw_power_wells[] = {
@@ -1744,6 +1809,19 @@ static struct i915_power_well skl_power_wells[] = {
 		.domains = SKL_DISPLAY_DDI_D_POWER_DOMAINS,
 		.ops = &skl_power_well_ops,
 		.data = SKL_DISP_PW_DDI_D,
+	},
+};
+
+static struct i915_dc_state skl_dc_states[] = {
+	{
+		.name = "DC5 state",
+		.domains = 0,
+		.ops = &skl_dc_state_ops,
+	},
+	{
+		.name = "DC6 state",
+		.domains = SKL_DC6_STATE_POWER_DOMAINS,
+		.ops = &skl_dc_state_ops,
 	},
 };
 

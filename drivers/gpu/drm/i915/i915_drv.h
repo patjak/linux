@@ -1237,6 +1237,26 @@ struct i915_power_well {
 	const struct i915_power_well_ops *ops;
 };
 
+struct i915_dc_state {
+	const char *name;
+	/* DC state disable count */
+	int count;
+	/* cached hw disabled state */
+	bool hw_disabled;
+	unsigned long domains;
+	const struct i915_dc_state_ops *ops;
+};
+
+struct i915_dc_state_ops {
+	/* Allow hardware to enter the specified DC state */
+	void (*enable)(struct drm_i915_private *dev_priv,
+		       struct i915_dc_state *dc_state);
+
+	/* Prevent hardware from entering the specified DC state */
+	void (*disable)(struct drm_i915_private *dev_priv,
+			struct i915_dc_state *dc_state);
+};
+
 struct i915_power_domains {
 	/*
 	 * Power wells needed for initialization at driver init and suspend
@@ -1245,10 +1265,12 @@ struct i915_power_domains {
 	bool init_power_on;
 	bool initializing;
 	int power_well_count;
+	int dc_state_count;
 
 	struct mutex lock;
 	int domain_use_count[POWER_DOMAIN_NUM];
 	struct i915_power_well *power_wells;
+	struct i915_dc_state *dc_states;
 };
 
 #define MAX_L3_SLICES 2
