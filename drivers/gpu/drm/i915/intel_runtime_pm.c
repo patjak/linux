@@ -68,7 +68,7 @@ bool intel_display_power_well_is_enabled(struct drm_i915_private *dev_priv,
 static void intel_power_well_enable(struct drm_i915_private *dev_priv,
 				    struct i915_power_well *power_well)
 {
-	DRM_DEBUG_KMS("enabling %s\n", power_well->name);
+	DRM_DEBUG_KMS("enabling \"%s\"\n", power_well->name);
 	power_well->ops->enable(dev_priv, power_well);
 	power_well->hw_enabled = true;
 }
@@ -76,7 +76,7 @@ static void intel_power_well_enable(struct drm_i915_private *dev_priv,
 static void intel_power_well_disable(struct drm_i915_private *dev_priv,
 				     struct i915_power_well *power_well)
 {
-	DRM_DEBUG_KMS("disabling %s\n", power_well->name);
+	DRM_DEBUG_KMS("disabling \"%s\"\n", power_well->name);
 	power_well->hw_enabled = false;
 	power_well->ops->disable(dev_priv, power_well);
 }
@@ -607,7 +607,6 @@ static void skl_set_power_well(struct drm_i915_private *dev_priv,
 		}
 
 		if (!is_enabled) {
-			DRM_DEBUG_KMS("Enabling %s\n", power_well->name);
 			if (wait_for((I915_READ(HSW_PWR_WELL_DRIVER) &
 				state_mask), 1))
 				DRM_ERROR("%s enable timeout\n",
@@ -618,7 +617,6 @@ static void skl_set_power_well(struct drm_i915_private *dev_priv,
 		if (enable_requested) {
 			I915_WRITE(HSW_PWR_WELL_DRIVER,	tmp & ~req_mask);
 			POSTING_READ(HSW_PWR_WELL_DRIVER);
-			DRM_DEBUG_KMS("Disabling %s\n", power_well->name);
 
 			if (power_well->data == SKL_DISP_PW_2) {
 				enum csr_state state;
