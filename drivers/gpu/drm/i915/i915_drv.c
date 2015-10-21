@@ -1114,7 +1114,7 @@ static int bxt_resume_prepare(struct drm_i915_private *dev_priv)
 static int skl_resume_prepare(struct drm_i915_private *dev_priv)
 {
 	skl_init_cdclk(dev_priv);
-	intel_csr_load_program(dev_priv);
+	intel_csr_load_program(dev_priv, false);
 
 	return 0;
 }

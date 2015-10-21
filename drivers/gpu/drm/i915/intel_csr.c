@@ -210,7 +210,7 @@ static char intel_get_substepping(struct drm_device *dev)
  * Everytime display comes back from low power state this function is called to
  * copy the firmware from internal memory to registers.
  */
-void intel_csr_load_program(struct drm_i915_private *dev_priv)
+void intel_csr_load_program(struct drm_i915_private *dev_priv, bool force)
 {
 	u32 *payload = dev_priv->csr.dmc_payload;
 	uint32_t i, fw_size;
@@ -226,7 +226,7 @@ void intel_csr_load_program(struct drm_i915_private *dev_priv)
 	 * Unfortunately the ACPI subsystem doesn't yet give us a way to
 	 * differentiate this, hence figure it out with this hack.
 	 */
-	if ((!dev_priv->csr.dmc_payload) || I915_READ(CSR_PROGRAM(0)))
+	if (!force && (!dev_priv->csr.dmc_payload || I915_READ(CSR_PROGRAM(0))))
 		return;
 
 	fw_size = dev_priv->csr.dmc_fw_size;
@@ -384,7 +384,7 @@ static void csr_load_work_fn(struct work_struct *work)
 		goto out;
 
 	/* load csr program during system boot, as needed for DC states */
-	intel_csr_load_program(dev_priv);
+	intel_csr_load_program(dev_priv, true);
 
 out:
 	if (dev_priv->csr.dmc_payload) {
