@@ -2660,6 +2660,7 @@ struct i915_params {
 	int panel_use_ssc;
 	int vbt_sdvo_panel_type;
 	int enable_rc6;
+	int enable_dc6;
 	int enable_fbc;
 	int enable_ppgtt;
 	int enable_execlists;

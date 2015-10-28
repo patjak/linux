@@ -753,7 +753,7 @@ static void skl_dc_off_power_well_enable(struct drm_i915_private *dev_priv,
 static void skl_dc_off_power_well_disable(struct drm_i915_private *dev_priv,
 					  struct i915_power_well *power_well)
 {
-	if (IS_SKYLAKE(dev_priv))
+	if (IS_SKYLAKE(dev_priv) && i915.enable_dc6)
 		skl_enable_dc6(dev_priv);
 	else
 		gen9_enable_dc5(dev_priv);
