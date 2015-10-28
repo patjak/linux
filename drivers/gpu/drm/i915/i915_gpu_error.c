@@ -370,7 +370,7 @@ int i915_error_state_to_str(struct drm_i915_error_state_buf *m,
 	if (HAS_CSR(dev)) {
 		struct intel_csr *csr = &dev_priv->csr;
 
-		err_printf(m, "DMC load state: %d\n", csr->state);
+		err_printf(m, "DMC loaded: %s\n", yesno(csr->dmc_payload));
 		err_printf(m, "DMC fw version: %d.%d\n",
 			   CSR_VERSION_MAJOR(csr->version),
 			   CSR_VERSION_MINOR(csr->version));
