@@ -1815,7 +1815,7 @@ int intel_power_domains_init(struct drm_i915_private *dev_priv)
 {
 	struct i915_power_domains *power_domains = &dev_priv->power_domains;
 
-	BUILD_BUG_ON(POWER_DOMAIN_NUM > 31);
+	BUILD_BUG_ON(POWER_DOMAIN_NUM > 63);
 
 	mutex_init(&power_domains->lock);
 

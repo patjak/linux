@@ -200,6 +200,7 @@ enum intel_display_power_domain {
 	POWER_DOMAIN_AUX_C,
 	POWER_DOMAIN_AUX_D,
 	POWER_DOMAIN_GMBUS,
+	POWER_DOMAIN_MODESET,
 	POWER_DOMAIN_INIT,
 
 	POWER_DOMAIN_NUM,
@@ -1226,7 +1227,7 @@ struct i915_power_well {
 	int count;
 	/* cached hw enabled state */
 	bool hw_enabled;
-	unsigned long domains;
+	unsigned long long domains;
 	unsigned long data;
 	const struct i915_power_well_ops *ops;
 };
